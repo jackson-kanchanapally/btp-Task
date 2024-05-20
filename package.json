@@ -1,15 +1,44 @@
 {
-    "name": "devs",
-    "version": "0.0.1",
-    "description": "An SAP Fiori application.",
-    "keywords": [
-        "ui5",
-        "openui5",
-        "sapui5"
-    ],
-    "main": "webapp/index.html",
-    "scripts": {
-        "deploy-config": "npx -p @sap/ux-ui5-tooling fiori add deploy-config cf"
+  "name": "Task-dev",
+  "version": "1.0.0",
+  "description": "A simple CAP project.",
+  "repository": "<Add your repository here>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@cap-js/postgres": "^1.8.0",
+    "@sap/cds": "^7",
+    "@sap/xssec": "^3",
+    "express": "^4",
+    "passport": "^0"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^1",
+    "@sap/cds-dk": "^7",
+    "@sap/ux-specification": "^1.120.10"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch-laptop": "cds watch --open laptop/webapp/index.html?sap-ui-xx-viewCache=false",
+    "watch-devs": "cds watch --open devs/webapp/index.html?sap-ui-xx-viewCache=false"
+  },
+  "cds": {
+    "fiori": {
+      "lean_draft": true,
+      "bypass_draft": true
     },
-    "devDependencies": { }
+    "requires": {
+      "db": {
+        "imp": "@cap-js/postgres",
+        "pool": {
+          "max": 20
+        }
+      },
+      "auth": "xsuaa"
+    }
+  },
+  "sapux": [
+    "app/laptop",
+    "app/devs"
+  ]
 }
