@@ -1,0 +1,74 @@
+#connected to postgres
+_schema-version: '3.1'
+ID: Task-dev
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npx cds build --production
+modules:
+  - name: Task-dev-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: postgres
+      - name: Task-dev-auth
+
+  - name: Task-dev
+    type: approuter.nodejs
+    path: app/
+    parameters:
+      buildpack: nodejs_buildpack
+      stack: cflinuxfs4
+      keep-existing-routes: true
+      disk-quota: 2048M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: Task-dev-auth
+      
+  - name: Task-dev-postgres-deployer
+    type: nodejs
+    path: gen/pg
+    parameters:
+      buildpack: nodejs_buildpack
+      no-route: true
+      no-start: true
+      tasks:
+        - name: deploy-to-postgresql
+          command: npm start
+    requires:
+      - name: postgres
+
+resources:
+  - name: postgres
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: postgresql-db
+      service-plan: trial
+  - name: Task-dev-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: Task-dev-${org}-${space}
+        tenant-mode: dedicated
